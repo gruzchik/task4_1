@@ -9,7 +9,7 @@ TRIM_CPU=$(echo ${CPU} | sed 's/^[ \t]*//;s/[ \t]*$//') # removing initial space
 echo -e "CPU: ${TRIM_CPU}" | tee -a ${SCRIPT_PWD}/task4_1.out
 
 MEMORY=$(cat /proc/meminfo| grep MemTotal | awk -F':' {'print $2'})
-TRIM_MEMORY=$(echo ${MEMORY}| sed 's/^[ \t]*//;s/[ \t]*$//') # removing initial spaces
+TRIM_MEMORY=$(echo ${MEMORY}| sed 's/^[ \t]*//;s/[ \t]*$//' | awk '{print toupper($0)}') # removing initial spaces
 echo -e "RAM: ${TRIM_MEMORY}" | tee -a ${SCRIPT_PWD}/task4_1.out
 
 ### start Motherboard functionality
@@ -31,7 +31,10 @@ MANUFACTURER=$(cat /root/tmp.txt | grep "Manufacturer" | awk -F':' {'print $2'})
 PRODUCT_NAME=$(cat /root/tmp.txt | grep "Product Name" | awk -F':' {'print $2'})
 VERSION=$(cat /root/tmp.txt | grep "Version" | awk -F':' {'print $2'})
 
-echo -e "Motherboard:${MANUFACTURER} /${PRODUCT_NAME} /${VERSION}" | tee -a ${SCRIPT_PWD}/task4_1.out
+if [[ -z ${MANUFACTURER} ]] || [[ ${MANUFACTURER} =~ ^[0-9]$ ]] && [[ ${MANUFACTURER} -eq 0 ]];then MANUFACTURER=$(echo "Unknown"); fi
+if [[ -z ${PRODUCT_NAME} ]] || [[ ${PRODUCT_NAME} =~ ^[0-9]$ ]] && [[ ${PRODUCT_NAME} -eq 0 ]];then PRODUCT_NAME=$(echo "Unknown"); fi
+
+echo -e "Motherboard:${MANUFACTURER} /${PRODUCT_NAME}" | tee -a ${SCRIPT_PWD}/task4_1.out
 ### end Motherboard functionality
 
 SNUMBER=$(dmidecode -s system-serial-number)
