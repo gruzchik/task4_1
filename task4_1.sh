@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# highlights color
+Red='\e[0;31m'
+Green='\e[0;32m'
+NC='\e[0m'
+
+echo '--- Hardware ---' | tee task4_1.out
+
+CPU=$(cat /proc/cpuinfo  | grep "model \name" | uniq -c | awk -F":" {' print $2'})
+TRIM_CPU=$(echo ${CPU} | sed 's/^[ \t]*//;s/[ \t]*$//') # removing initial spaces
+echo -e "CPU: ${TRIM_CPU}" | tee -a task4_1.out
+
+MEMORY=$(cat /proc/meminfo| grep MemTotal | awk -F':' {'print $2'})
+TRIM_MEMORY=$(echo ${MEMORY}| sed 's/^[ \t]*//;s/[ \t]*$//') # removing initial spaces
+echo -e "RAM: ${TRIM_MEMORY}" | tee -a task4_1.out
+
+### start Motherboard functionality
+n=0 #counter for Motherboard block
+echo '' > /root/tmp.txt # temporary file for Motherboard block
+
+dmidecode| while read line; do
+        if [[ $line == "Base Board Information" ]] || [ ${n} -eq 1 ]; then
+                echo $line >> /root/tmp.txt
+                n=1
+        fi
+        if [[ -z $line ]] && [ ${n} -eq 1 ]; then
+                n=0
+        fi
+
+done
+
+MANUFACTURER=$(cat /root/tmp.txt | grep "Manufacturer" | awk -F':' {'print $2'})
+PRODUCT_NAME=$(cat /root/tmp.txt | grep "Product Name" | awk -F':' {'print $2'})
+VERSION=$(cat /root/tmp.txt | grep "Version" | awk -F':' {'print $2'})
+
+echo -e "Motherboard:${MANUFACTURER} /${PRODUCT_NAME} /${VERSION}" | tee -a task4_1.out
+### end Motherboard functionality
+
+SNUMBER=$(dmidecode -s system-serial-number)
+if [[ -z ${SNUMBER} ]] || [[ ${SNUMBER} =~ ^[0-9]$ ]] && [[ ${SNUMBER} -eq 0 ]];then SNUMBER=$(echo "Unknown"); fi
+echo -e "System Serial Number: ${SNUMBER}" | tee -a task4_1.out
+echo '--- System ---' | tee -a task4_1.out
+
+DISTR=$(cat /etc/os-release | grep PRETTY_NAME | awk -F'=' {'print $2'})
+TRIM_DISTR=$(echo ${DISTR} | sed -e 's/^"//' -e 's/"$//') # removing initial quotes
+echo -e "OS Distribution: ${TRIM_DISTR}" | tee -a task4_1.out
+
+KERNEL=$(uname -a | awk {'print $3'})
+echo -e "Kernel version: ${KERNEL}" | tee -a task4_1.out
+
+INSTALL_DATE=$(tune2fs -l $(mount | grep 'on \/ ' | awk '{print $1}') | grep 'Filesystem \created' | awk -F"created:" {'print$2'})
+TRIM_INSTALL_DATE=$(echo ${INSTALL_DATE} | sed 's/^[ \t]*//;s/[ \t]*$//') # removing initial spaces
+echo -e "Installation date: ${TRIM_INSTALL_DATE}" | tee -a task4_1.out
+
+HOSTNAME=$(hostname -f)
+echo -e "Hostname: ${HOSTNAME}" | tee -a task4_1.out
+
+UPTINFO=$(uptime  | awk -F',' {'print $1'}| awk {'print $4'})
+if [[ -z $UPTINFO ]]; then
+	UPTIME="$(uptime  | awk -F',' {'print $1'}| awk {'print $3" "$4'}) hours"
+else
+	UPTIME=$(uptime  | awk -F',' {'print $1'}| awk {'print $3" "$4'})
+fi
+echo -e "Uptime: ${UPTIME}" | tee -a task4_1.out
+
+COUNTPROC=$(ps axfu | wc -l)
+echo -e "Processes running: ${COUNTPROC}" | tee -a task4_1.out
+
+USERSNUM=$(ps aux | awk {' print $1 '} | sort -n | uniq -c | wc -l)
+echo -e "User logged in: ${USERSNUM}" | tee -a task4_1.out
+
+echo '--- Network ---' | tee -a task4_1.out
+n=1 # count of network interfaces
+ip a | grep 'inet ' | while read line;do
+	IFACE=$(echo $line | awk {'print $2'})
+	echo "<Iface #${n} name>: ${IFACE}" | tee -a task4_1.out
+	n=$((n+1))
+done
