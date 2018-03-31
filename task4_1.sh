@@ -27,14 +27,14 @@ dmidecode| while read line; do
 
 done
 
-MANUFACTURER=$(cat /root/tmp.txt | grep "Manufacturer" | awk -F':' {'print $2'})
+MANUFACTURER=$(cat /root/tmp.txt | grep "Manufacturer" | awk -F':' {'print $2'} | sed 's/^[ \t]*//;s/[ \t]*$//') #remove space
 PRODUCT_NAME=$(cat /root/tmp.txt | grep "Product Name" | awk -F':' {'print $2'})
 VERSION=$(cat /root/tmp.txt | grep "Version" | awk -F':' {'print $2'})
 
-if [[ -z ${MANUFACTURER} ]] || [[ ${MANUFACTURER} =~ ^[0-9]$ ]] && [[ ${MANUFACTURER} -eq 0 ]];then MANUFACTURER=$(echo "Unknown"); fi
+if [[ -z ${MANUFACTURER} ]] || [[ ${MANUFACTURER} =~ ^[0-9]$ ]] && [[ ${MANUFACTURER} -eq 0 ]];then MANUFACTURER=$(echo " Unknown"); fi
 if [[ -z ${PRODUCT_NAME} ]] || [[ ${PRODUCT_NAME} =~ ^[0-9]$ ]] && [[ ${PRODUCT_NAME} -eq 0 ]];then PRODUCT_NAME=$(echo "Unknown"); fi
 
-echo -e "Motherboard:${MANUFACTURER} /${PRODUCT_NAME}" | tee -a ${SCRIPT_PWD}/task4_1.out
+echo -e "Motherboard: ${MANUFACTURER} /${PRODUCT_NAME}" | tee -a ${SCRIPT_PWD}/task4_1.out
 ### end Motherboard functionality
 
 SNUMBER=$(dmidecode -s system-serial-number)
