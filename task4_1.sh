@@ -70,10 +70,33 @@ echo -e "Processes running: ${COUNTPROC}" | tee -a ${SCRIPT_PWD}/task4_1.out
 USERSNUM=$(ps aux | awk {' print $1 '} | sort -n | uniq -c | wc -l)
 echo -e "User logged in: ${USERSNUM}" | tee -a ${SCRIPT_PWD}/task4_1.out
 
+#### start Network functionality
 echo '--- Network ---' | tee -a ${SCRIPT_PWD}/task4_1.out
-n=1 # count of network interfaces
-ip a | grep 'inet ' | while read line;do
-	IFACE=$(echo $line | awk {'print $2'})
-	echo "<Iface #${n} name>: ${IFACE}" | tee -a ${SCRIPT_PWD}/task4_1.out
-	n=$((n+1))
+
+n=1
+marker="stop"
+ip a | while read line; do
+        ETHSTART=$(echo $line | grep "^$n:\ ")
+        ETHFINISH=$(echo $line | grep "inet\ ")
+        if [[ -n ${ETHSTART} ]]; then
+                marker="start"
+                ETHLINE=$( echo $line | awk -F":" {' print $2 '} | sed 's/^[ \t]*//;s/[ \t]*$//')
+                #echo ${ETHLINE}
+                n=$((n+1))
+        fi
+        if [[ -n ${ETHFINISH} ]];then
+                ETHFIN=$(echo $line | awk {' print $2 '})
+                if [[ -z ${ETHFIN} ]];then ETHFIN="-"; fi
+                number=$((n-1))
+                echo "${ETHLINE}: ${ETHFIN}" | tee -a ${SCRIPT_PWD}/task4_1.out
+                marker="stop"
+        fi
 done
+
+#n=1 # count of network interfaces
+#ip a | grep 'inet ' | while read line;do
+#	IFACE=$(echo $line | awk {'print $2'})
+#	echo "<Iface #${n} name>: ${IFACE}" | tee -a ${SCRIPT_PWD}/task4_1.out
+#	n=$((n+1))
+#done
+### end Network functionality
